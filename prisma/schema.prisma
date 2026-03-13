@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MaritalStatus {
+  UNMARRIED
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  
+  // Authentication
+  email     String?  @unique
+  mobile    String   @unique
+  password  String
+  otp       String?
+  otpExpiry DateTime?
+  
+  // Role & Status
+  role      Role     @default(USER)
+  approvalStatus ApprovalStatus @default(PENDING)
+  isFirstLogin Boolean @default(true)
+  
+  // Personal Details (प्रथम नाम, पदवी नाम, etc)
+  firstName String
+  lastName  String
+  fatherOrHusbandName String
+  motherName String?
+  age       Int
+  dateOfBirth DateTime?
+  gender    String
+  
+  // Family Details
+  familyId  String?
+  gotra     String?
+  motherGotra String?
+  maritalStatus MaritalStatus @default(UNMARRIED)
+  
+  // Education & Profession
+  education String?
+  profession String?
+  yearlyIncome String?
+  
+  // Location Details
+  state     String
+  district  String
+  currentAddress String
+  ancestralVillage String
+  
+  // Profile
+  profilePicture String?
+  bio       String?
+  height    String?
+  complexion String?
+  
+  // Astrological Details
+  manglik   String?
+  birthTime String?
+  birthPlace String?
+  
+  // Village assignment for moderators
+  assignedVillage String?
+  
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  approvedBy String?
+  approvedAt DateTime?
+
+  @@map("users")
+  @@index([role])
+  @@index([approvalStatus])
+  @@index([gender])
+  @@index([assignedVillage])
+}

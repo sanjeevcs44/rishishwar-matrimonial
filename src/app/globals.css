@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import existing Velzon-based theme */
+@import '../styles/theme.css';
+
+@layer base {
+  /* Reset */
+  * {
+    @apply box-border m-0 p-0;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  /* Body styles - using Tailwind classes with design system colors */
+  body {
+    @apply font-sans text-foreground bg-background antialiased;
+    line-height: 1.6;
+  }
+
+  /* Typography */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold text-foreground;
+    line-height: 1.25;
+  }
+
+  h1 {
+    @apply text-4xl;
+  }
+  h2 {
+    @apply text-3xl;
+  }
+  h3 {
+    @apply text-2xl;
+  }
+  h4 {
+    @apply text-xl;
+  }
+  h5 {
+    @apply text-lg;
+  }
+  h6 {
+    @apply text-base;
+  }
+
+  p {
+    @apply mb-4 text-muted-foreground;
+  }
+
+  a {
+    @apply text-primary no-underline transition-colors hover:text-primary/80;
+  }
+
+  /* Form elements */
+  button {
+    @apply border-0 bg-transparent font-sans cursor-pointer;
+  }
+
+  input,
+  textarea,
+  select {
+    @apply font-sans text-base;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

@@ -1,0 +1,59 @@
+/* Global Styles for Shared Components */
+
+/* Tailwind CSS v4 Import */
+@import 'tailwindcss';
+
+/* Theme Configuration using CSS Variables */
+@theme {
+  --color-primary: #0ea5e9;
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #a855f7;
+  --color-secondary-foreground: #ffffff;
+
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  --color-success: #22c55e;
+  --color-success-foreground: #ffffff;
+
+  --color-warning: #f59e0b;
+  --color-warning-foreground: #ffffff;
+
+  --color-info: #26c6da;
+  --color-info-foreground: #ffffff;
+
+  --color-foreground: #1f2937;
+  --color-background: #ffffff;
+  --color-muted: #f3f4f6;
+  --color-muted-foreground: #6b7280;
+  --color-accent: #0ea5e9;
+  --color-accent-foreground: #ffffff;
+  --color-border: #e5e7eb;
+  --color-input: #e5e7eb;
+  --color-ring: #0ea5e9;
+  --color-card: #ffffff;
+  --color-card-foreground: #1f2937;
+}
+
+/* Reset and Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure proper rendering of components */
+body {
+  background-color: #ffffff;
+  color: #1f2937;
+}
