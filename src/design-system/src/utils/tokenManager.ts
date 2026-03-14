@@ -37,7 +37,6 @@ export const tokenManager = {
    * @deprecated Backend sets this via Set-Cookie header
    * @param _token - Unused parameter (kept for backward compatibility)
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setRefreshToken: (_token: string): void => {
     // Refresh token is set by backend via HttpOnly cookie
     // This function exists for backward compatibility only
