@@ -54,8 +54,13 @@ const filterAndSortUsers = (
 ): { perfectMatches: User[]; partialMatches: User[] } => {
   if (!currentUser) return { perfectMatches: users, partialMatches: [] }
 
-  // Filter by role first
+  // Filter by role and approval status first
   let filteredUsers = users.filter((user) => {
+    // Only show APPROVED profiles
+    if (user.approvalStatus !== 'APPROVED') {
+      return false
+    }
+
     if (currentUser.role === 'USER') {
       return user.role === 'USER'
     }
