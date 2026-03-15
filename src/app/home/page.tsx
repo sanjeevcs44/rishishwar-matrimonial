@@ -531,9 +531,6 @@ export default function HomePage() {
                     >
                       <option value="">सभी दिखाएं (Show All)</option>
                       <option value="YES">केवल मांगलिक (Only Manglik)</option>
-                      <option value="NO">
-                        केवल गैर-मांगलिक (Only Non-Manglik)
-                      </option>
                     </select>
                     {manglikFilter && (
                       <Button
@@ -606,7 +603,7 @@ export default function HomePage() {
                 <div className="text-center py-12">
                   <p className="text-xl text-muted">
                     {educationFilter || manglikFilter
-                      ? `No matches found with the selected filters${educationFilter ? ` (Education: ${educationFilter})` : ''}${manglikFilter ? ` (${manglikFilter === 'YES' ? 'Only Manglik' : 'Only Non-Manglik'})` : ''}`
+                      ? `No matches found with the selected filters${educationFilter ? ` (Education: ${educationFilter})` : ''}${manglikFilter === 'YES' ? ' (Only Manglik)' : ''}`
                       : 'No compatible matches found. Be the first to invite someone!'}
                   </p>
                 </div>
