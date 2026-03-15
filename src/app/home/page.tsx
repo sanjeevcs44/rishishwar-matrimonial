@@ -18,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { EDUCATION_OPTIONS } from '@/data/formOptions'
 
 // Helper function to format combined gotra/village (latin-hindi format)
 const formatCombinedValue = (value: string | null): string => {
@@ -163,6 +164,8 @@ export default function HomePage() {
     useState<VillageModerator | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [educationFilter, setEducationFilter] = useState<string>('')
+  const [manglikFilter, setManglikFilter] = useState<string>('')
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -478,6 +481,91 @@ export default function HomePage() {
             </div>
           )}
 
+        {/* Filters */}
+        {(currentUser?.approvalStatus === 'APPROVED' ||
+          currentUser?.role === 'ADMIN' ||
+          currentUser?.role === 'MODERATOR') && (
+          <div className="mb-6">
+            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200">
+              <CardContent className="py-4">
+                <div className="space-y-4">
+                  {/* Education Filter */}
+                  <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <label className="font-semibold text-gray-700 whitespace-nowrap">
+                      🎓 शिक्षा फ़िल्टर (Education Filter):
+                    </label>
+                    <select
+                      value={educationFilter}
+                      onChange={(e) => setEducationFilter(e.target.value)}
+                      className="flex-1 px-4 py-2 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none bg-white"
+                    >
+                      <option value="">
+                        सभी शिक्षा स्तर (All Education Levels)
+                      </option>
+                      {EDUCATION_OPTIONS.map((education) => (
+                        <option key={education} value={education}>
+                          {education}
+                        </option>
+                      ))}
+                    </select>
+                    {educationFilter && (
+                      <Button
+                        onClick={() => setEducationFilter('')}
+                        variant="outline"
+                        className="border-purple-300 text-purple-600 hover:bg-purple-100 whitespace-nowrap"
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Manglik Filter */}
+                  <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <label className="font-semibold text-gray-700 whitespace-nowrap">
+                      🔮 मांगलिक फ़िल्टर (Manglik Filter):
+                    </label>
+                    <select
+                      value={manglikFilter}
+                      onChange={(e) => setManglikFilter(e.target.value)}
+                      className="flex-1 px-4 py-2 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none bg-white"
+                    >
+                      <option value="">सभी दिखाएं (Show All)</option>
+                      <option value="YES">केवल मांगलिक (Only Manglik)</option>
+                      <option value="NO">
+                        केवल गैर-मांगलिक (Only Non-Manglik)
+                      </option>
+                    </select>
+                    {manglikFilter && (
+                      <Button
+                        onClick={() => setManglikFilter('')}
+                        variant="outline"
+                        className="border-purple-300 text-purple-600 hover:bg-purple-100 whitespace-nowrap"
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Clear All Filters Button */}
+                  {(educationFilter || manglikFilter) && (
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        onClick={() => {
+                          setEducationFilter('')
+                          setManglikFilter('')
+                        }}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        Clear All Filters
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {currentUser?.approvalStatus === 'APPROVED' ||
         currentUser?.role === 'ADMIN' ||
         currentUser?.role === 'MODERATOR'
@@ -486,18 +574,46 @@ export default function HomePage() {
                 users,
                 currentUser,
               )
-              const totalMatches = perfectMatches.length + partialMatches.length
+
+              // Apply filters
+              let filteredPerfectMatches = perfectMatches
+              let filteredPartialMatches = partialMatches
+
+              // Apply education filter
+              if (educationFilter) {
+                filteredPerfectMatches = filteredPerfectMatches.filter(
+                  (user) => user.education === educationFilter,
+                )
+                filteredPartialMatches = filteredPartialMatches.filter(
+                  (user) => user.education === educationFilter,
+                )
+              }
+
+              // Apply manglik filter
+              if (manglikFilter) {
+                filteredPerfectMatches = filteredPerfectMatches.filter(
+                  (user) => user.manglik === manglikFilter,
+                )
+                filteredPartialMatches = filteredPartialMatches.filter(
+                  (user) => user.manglik === manglikFilter,
+                )
+              }
+
+              const totalMatches =
+                filteredPerfectMatches.length + filteredPartialMatches.length
 
               return totalMatches === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-xl text-muted">
-                    No compatible matches found. Be the first to invite someone!
+                    {educationFilter || manglikFilter
+                      ? `No matches found with the selected filters${educationFilter ? ` (Education: ${educationFilter})` : ''}${manglikFilter ? ` (${manglikFilter === 'YES' ? 'Only Manglik' : 'Only Non-Manglik'})` : ''}`
+                      : 'No compatible matches found. Be the first to invite someone!'}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-8">
                   {/* Perfect Matches Section */}
-                  {perfectMatches.length > 0 && (
+                  {filteredPerfectMatches.length > 0 && (
                     <div>
                       {/* Only show header for regular users, not admin/moderator */}
                       {currentUser?.role === 'USER' && (
@@ -507,19 +623,19 @@ export default function HomePage() {
                           </h2>
                           <p className="text-gray-600">
                             गोत्र और माता के गोत्र में कोई मेल नहीं (
-                            {perfectMatches.length} प्रोफाइल)
+                            {filteredPerfectMatches.length} प्रोफाइल)
                           </p>
                         </div>
                       )}
                       {currentUser?.role !== 'USER' && (
                         <div className="mb-6">
                           <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                            All Users ({perfectMatches.length} प्रोफाइल)
+                            All Users ({filteredPerfectMatches.length} प्रोफाइल)
                           </h2>
                         </div>
                       )}
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {perfectMatches.map((user) => (
+                        {filteredPerfectMatches.map((user) => (
                           <Card
                             key={user.id}
                             className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 shadow-md"
@@ -662,7 +778,7 @@ export default function HomePage() {
                   )}
 
                   {/* Partial Matches Section */}
-                  {partialMatches.length > 0 &&
+                  {filteredPartialMatches.length > 0 &&
                     currentUser?.role === 'USER' && (
                       <div>
                         <div className="mb-6">
@@ -671,11 +787,11 @@ export default function HomePage() {
                           </h2>
                           <p className="text-gray-600">
                             गोत्र अलग है लेकिन माता का गोत्र समान है (
-                            {partialMatches.length} प्रोफाइल)
+                            {filteredPartialMatches.length} प्रोफाइल)
                           </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                          {partialMatches.map((user) => (
+                          {filteredPartialMatches.map((user) => (
                             <Card
                               key={user.id}
                               className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 shadow-md"
