@@ -55,16 +55,17 @@ const filterAndSortUsers = (
 ): { perfectMatches: User[]; partialMatches: User[] } => {
   if (!currentUser) return { perfectMatches: users, partialMatches: [] }
 
-  // Filter by role and approval status first
+  // Filter by role and approval status
   let filteredUsers = users.filter((user) => {
-    // Only show APPROVED profiles
-    if (user.approvalStatus !== 'APPROVED') {
-      return false
-    }
-
+    // For regular users, only show APPROVED profiles
     if (currentUser.role === 'USER') {
+      if (user.approvalStatus !== 'APPROVED') {
+        return false
+      }
       return user.role === 'USER'
     }
+
+    // For ADMIN and MODERATOR, show ALL profiles (approved, pending, rejected)
     return true
   })
 
