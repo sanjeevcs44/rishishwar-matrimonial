@@ -5,7 +5,7 @@ export const runtime = 'edge'
 export async function GET() {
   try {
     const token = process.env.BLOB_READ_WRITE_TOKEN
-    
+
     return NextResponse.json({
       success: true,
       hasToken: !!token,
@@ -14,9 +14,12 @@ export async function GET() {
       vercelEnv: process.env.VERCEL_ENV,
     })
   } catch (error: any) {
-    return NextResponse.json({
-      success: false,
-      error: error.message,
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message,
+      },
+      { status: 500 },
+    )
   }
 }
