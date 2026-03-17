@@ -19,6 +19,11 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { EDUCATION_OPTIONS } from '@/data/formOptions'
+import {
+  calculateKundliMatch,
+  calculateKundliMatchFromDOB,
+  getCompatibilityLevel,
+} from '@/lib/kundliMatcher'
 
 // Helper function to format combined gotra/village (latin-hindi format)
 const formatCombinedValue = (value: string | null): string => {
@@ -114,8 +119,138 @@ const filterAndSortUsers = (
       // Users with gotra conflicts are excluded completely
     })
 
-    // Return categorized matches
-    return { perfectMatches, partialMatches }
+    // Sort by Kundli match percentage (highest first)
+    // Uses DOB + birth time automatically; falls back to manual nakshatra/rashi/gana/nadi
+    const sortByKundliMatch = (usersList: User[]) => {
+      // Current user must have at least DOB or manual Kundli data
+      const currentUserHasData =
+        currentUser.dateOfBirth ||
+        (currentUser.nakshatra &&
+          currentUser.rashi &&
+          currentUser.gana &&
+          currentUser.nadi)
+
+      if (!currentUserHasData) return usersList
+
+      return usersList.sort((a, b) => {
+        const aHasData =
+          a.dateOfBirth || (a.nakshatra && a.rashi && a.gana && a.nadi)
+        const bHasData =
+          b.dateOfBirth || (b.nakshatra && b.rashi && b.gana && b.nadi)
+
+        const matchA = aHasData
+          ? calculateKundliMatchFromDOB(
+              {
+                dateOfBirth: currentUser.dateOfBirth,
+                birthTime: currentUser.birthTime,
+                birthPlace: currentUser.birthPlace,
+                nakshatra: currentUser.nakshatra,
+                rashi: currentUser.rashi,
+                gana: currentUser.gana,
+                nadi: currentUser.nadi,
+              },
+              {
+                dateOfBirth: a.dateOfBirth,
+                birthTime: a.birthTime,
+                birthPlace: a.birthPlace,
+                nakshatra: a.nakshatra,
+                rashi: a.rashi,
+                gana: a.gana,
+                nadi: a.nadi,
+              },
+            )
+          : null
+
+        const matchB = bHasData
+          ? calculateKundliMatchFromDOB(
+              {
+                dateOfBirth: currentUser.dateOfBirth,
+                birthTime: currentUser.birthTime,
+                birthPlace: currentUser.birthPlace,
+                nakshatra: currentUser.nakshatra,
+                rashi: currentUser.rashi,
+                gana: currentUser.gana,
+                nadi: currentUser.nadi,
+              },
+              {
+                dateOfBirth: b.dateOfBirth,
+                birthTime: b.birthTime,
+                birthPlace: b.birthPlace,
+                nakshatra: b.nakshatra,
+                rashi: b.rashi,
+                gana: b.gana,
+                nadi: b.nadi,
+              },
+            )
+          : null
+
+        if (matchA && matchB) return matchB.percentage - matchA.percentage
+        if (matchA && !matchB) return -1
+        if (!matchA && matchB) return 1
+        return 0
+      })
+    }
+
+    // Filter: only show profiles with Kundli match >= 50%
+    // If current user has no Kundli data → skip filter (show all)
+    // If other user has no Kundli data → skip that user from filter (exclude them)
+    const filterByKundliMatch = (usersList: User[]) => {
+      const currentUserHasData =
+        currentUser.dateOfBirth ||
+        (currentUser.nakshatra &&
+          currentUser.rashi &&
+          currentUser.gana &&
+          currentUser.nadi)
+
+      // If current user has no data, can't calculate match → show all
+      if (!currentUserHasData) return usersList
+
+      return usersList.filter((user) => {
+        const userHasData =
+          user.dateOfBirth ||
+          (user.nakshatra && user.rashi && user.gana && user.nadi)
+
+        // If the other user has no data, we can't verify match → exclude them
+        if (!userHasData) return false
+
+        const match = calculateKundliMatchFromDOB(
+          {
+            dateOfBirth: currentUser.dateOfBirth,
+            birthTime: currentUser.birthTime,
+            birthPlace: currentUser.birthPlace,
+            nakshatra: currentUser.nakshatra,
+            rashi: currentUser.rashi,
+            gana: currentUser.gana,
+            nadi: currentUser.nadi,
+          },
+          {
+            dateOfBirth: user.dateOfBirth,
+            birthTime: user.birthTime,
+            birthPlace: user.birthPlace,
+            nakshatra: user.nakshatra,
+            rashi: user.rashi,
+            gana: user.gana,
+            nadi: user.nadi,
+          },
+        )
+
+        return match.percentage >= 50
+      })
+    }
+
+    // Apply Kundli filter (>= 50%) then sort by percentage (highest first)
+    const filteredAndSortedPerfectMatches = sortByKundliMatch(
+      filterByKundliMatch(perfectMatches),
+    )
+    const filteredAndSortedPartialMatches = sortByKundliMatch(
+      filterByKundliMatch(partialMatches),
+    )
+
+    // Return categorized and sorted matches
+    return {
+      perfectMatches: filteredAndSortedPerfectMatches,
+      partialMatches: filteredAndSortedPartialMatches,
+    }
   }
 
   return { perfectMatches: filteredUsers, partialMatches: [] }
@@ -146,8 +281,13 @@ interface User {
   approvalStatus: string
   assignedVillage?: string | null
   manglik?: string | null
+  dateOfBirth?: string | null
   birthTime?: string | null
   birthPlace?: string | null
+  nakshatra?: string | null
+  rashi?: string | null
+  gana?: string | null
+  nadi?: string | null
 }
 
 interface VillageModerator {
@@ -633,169 +773,55 @@ export default function HomePage() {
                         </div>
                       )}
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {filteredPerfectMatches.map((user) => (
-                          <Card
-                            key={user.id}
-                            className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 shadow-md"
-                          >
-                            {/* Profile Image - Full width at top */}
-                            <div className="relative h-48 bg-gradient-to-br from-purple-400 to-pink-400 overflow-hidden">
-                              {user.profilePicture ? (
-                                <img
-                                  src={user.profilePicture}
-                                  alt={`${user.firstName} ${user.lastName}`}
-                                  className="w-full h-full object-cover object-[center_20%]"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <span className="text-white text-6xl font-bold">
-                                    {user.firstName.charAt(0)}
-                                    {user.lastName.charAt(0)}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
+                        {filteredPerfectMatches.map((user) => {
+                          // Calculate Kundli match using DOB + birth time (auto-derived)
+                          // Falls back to manual nakshatra/rashi/gana/nadi if DOB not available
+                          let kundliMatch = null
+                          if (currentUser && currentUser.role === 'USER') {
+                            const currentUserHasData =
+                              currentUser.dateOfBirth ||
+                              (currentUser.nakshatra &&
+                                currentUser.rashi &&
+                                currentUser.gana &&
+                                currentUser.nadi)
+                            const userHasData =
+                              user.dateOfBirth ||
+                              (user.nakshatra &&
+                                user.rashi &&
+                                user.gana &&
+                                user.nadi)
 
-                            <CardContent className="p-4">
-                              {/* Name and Badges */}
-                              <div className="mb-3">
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                  {user.firstName} {user.lastName}
-                                </h3>
-                                <div className="flex flex-wrap gap-1">
-                                  {user.role === 'ADMIN' && (
-                                    <Badge
-                                      variant="warning"
-                                      className="text-xs"
-                                    >
-                                      <MdAdminPanelSettings className="mr-1" />
-                                      Admin
-                                    </Badge>
-                                  )}
-                                  {user.role === 'MODERATOR' && (
-                                    <Badge variant="info" className="text-xs">
-                                      <FaUserShield className="mr-1" />
-                                      Moderator
-                                    </Badge>
-                                  )}
-                                  {user.approvalStatus === 'APPROVED' && (
-                                    <Badge
-                                      variant="success"
-                                      className="text-xs"
-                                    >
-                                      <MdVerified className="mr-1" />
-                                      Approved
-                                    </Badge>
-                                  )}
-                                  {user.approvalStatus === 'PENDING' && (
-                                    <Badge
-                                      variant="warning"
-                                      className="text-xs"
-                                    >
-                                      <MdPending className="mr-1" />
-                                      Pending
-                                    </Badge>
-                                  )}
-                                  {user.approvalStatus === 'REJECTED' && (
-                                    <Badge
-                                      variant="destructive"
-                                      className="text-xs"
-                                    >
-                                      <MdCancel className="mr-1" />
-                                      Rejected
-                                    </Badge>
-                                  )}
-                                  {user.manglik === 'YES' && (
-                                    <Badge
-                                      variant="destructive"
-                                      className="text-xs"
-                                    >
-                                      मांगलिक
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
+                            if (currentUserHasData && userHasData) {
+                              kundliMatch = calculateKundliMatchFromDOB(
+                                {
+                                  dateOfBirth: currentUser.dateOfBirth,
+                                  birthTime: currentUser.birthTime,
+                                  birthPlace: currentUser.birthPlace,
+                                  nakshatra: currentUser.nakshatra,
+                                  rashi: currentUser.rashi,
+                                  gana: currentUser.gana,
+                                  nadi: currentUser.nadi,
+                                },
+                                {
+                                  dateOfBirth: user.dateOfBirth,
+                                  birthTime: user.birthTime,
+                                  birthPlace: user.birthPlace,
+                                  nakshatra: user.nakshatra,
+                                  rashi: user.rashi,
+                                  gana: user.gana,
+                                  nadi: user.nadi,
+                                },
+                              )
+                            }
+                          }
 
-                              {/* Profile Details */}
-                              <div className="space-y-2 text-sm text-gray-600 mb-4">
-                                {user.fatherOrHusbandName && (
-                                  <p>
-                                    <strong>पिता/पति:</strong>{' '}
-                                    {user.fatherOrHusbandName}
-                                  </p>
-                                )}
-                                <p>
-                                  <strong>आयु/लिंग:</strong> {user.age} years •{' '}
-                                  {user.gender}
-                                </p>
-                                {user.gotra && (
-                                  <p>
-                                    <strong>गोत्र:</strong>{' '}
-                                    {formatCombinedValue(user.gotra)}
-                                  </p>
-                                )}
-                                {user.motherGotra && (
-                                  <p>
-                                    <strong>माता का गोत्र:</strong>{' '}
-                                    {formatCombinedValue(user.motherGotra)}
-                                  </p>
-                                )}
-                                {user.ancestralVillage && (
-                                  <p>
-                                    <strong>गांव:</strong>{' '}
-                                    {formatCombinedValue(user.ancestralVillage)}
-                                  </p>
-                                )}
-                                {user.education && (
-                                  <p>
-                                    <strong>शिक्षा:</strong> {user.education}
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Footer with timestamp and button */}
-                              <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                                <p className="text-xs text-gray-500">
-                                  Profile ID: {user.id.substring(0, 8)}
-                                </p>
-                                <Button
-                                  onClick={() =>
-                                    router.push(`/admin/profile/${user.id}`)
-                                  }
-                                  variant="default"
-                                  size="sm"
-                                >
-                                  View Profile
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Partial Matches Section */}
-                  {filteredPartialMatches.length > 0 &&
-                    currentUser?.role === 'USER' && (
-                      <div>
-                        <div className="mb-6">
-                          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                            आंशिक मिलान (Partial Matches)
-                          </h2>
-                          <p className="text-gray-600">
-                            गोत्र अलग है लेकिन माता का गोत्र समान है (
-                            {filteredPartialMatches.length} प्रोफाइल)
-                          </p>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                          {filteredPartialMatches.map((user) => (
+                          return (
                             <Card
                               key={user.id}
                               className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 shadow-md"
                             >
                               {/* Profile Image - Full width at top */}
-                              <div className="relative h-48 bg-gradient-to-br from-orange-400 to-amber-400 overflow-hidden">
+                              <div className="relative h-48 bg-gradient-to-br from-purple-400 to-pink-400 overflow-hidden">
                                 {user.profilePicture ? (
                                   <img
                                     src={user.profilePicture}
@@ -808,6 +834,26 @@ export default function HomePage() {
                                       {user.firstName.charAt(0)}
                                       {user.lastName.charAt(0)}
                                     </span>
+                                  </div>
+                                )}
+
+                                {/* Kundli Match Badge */}
+                                {kundliMatch && (
+                                  <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border-2 border-purple-500">
+                                    <div className="text-2xl font-bold text-purple-600">
+                                      {kundliMatch.percentage}%
+                                    </div>
+                                    <div className="text-xs text-gray-600 font-semibold">
+                                      {
+                                        getCompatibilityLevel(
+                                          kundliMatch.totalScore,
+                                        ).level
+                                      }
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {kundliMatch.totalScore}/
+                                      {kundliMatch.maxScore}
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -928,7 +974,233 @@ export default function HomePage() {
                                 </div>
                               </CardContent>
                             </Card>
-                          ))}
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Partial Matches Section */}
+                  {filteredPartialMatches.length > 0 &&
+                    currentUser?.role === 'USER' && (
+                      <div>
+                        <div className="mb-6">
+                          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                            आंशिक मिलान (Partial Matches)
+                          </h2>
+                          <p className="text-gray-600">
+                            गोत्र अलग है लेकिन माता का गोत्र समान है (
+                            {filteredPartialMatches.length} प्रोफाइल)
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                          {filteredPartialMatches.map((user) => {
+                            // Calculate Kundli match using DOB + birth time (auto-derived)
+                            // Falls back to manual nakshatra/rashi/gana/nadi if DOB not available
+                            let kundliMatch = null
+                            if (currentUser && currentUser.role === 'USER') {
+                              const currentUserHasData =
+                                currentUser.dateOfBirth ||
+                                (currentUser.nakshatra &&
+                                  currentUser.rashi &&
+                                  currentUser.gana &&
+                                  currentUser.nadi)
+                              const userHasData =
+                                user.dateOfBirth ||
+                                (user.nakshatra &&
+                                  user.rashi &&
+                                  user.gana &&
+                                  user.nadi)
+
+                              if (currentUserHasData && userHasData) {
+                                kundliMatch = calculateKundliMatchFromDOB(
+                                  {
+                                    dateOfBirth: currentUser.dateOfBirth,
+                                    birthTime: currentUser.birthTime,
+                                    birthPlace: currentUser.birthPlace,
+                                    nakshatra: currentUser.nakshatra,
+                                    rashi: currentUser.rashi,
+                                    gana: currentUser.gana,
+                                    nadi: currentUser.nadi,
+                                  },
+                                  {
+                                    dateOfBirth: user.dateOfBirth,
+                                    birthTime: user.birthTime,
+                                    birthPlace: user.birthPlace,
+                                    nakshatra: user.nakshatra,
+                                    rashi: user.rashi,
+                                    gana: user.gana,
+                                    nadi: user.nadi,
+                                  },
+                                )
+                              }
+                            }
+
+                            return (
+                              <Card
+                                key={user.id}
+                                className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 shadow-md"
+                              >
+                                {/* Profile Image - Full width at top */}
+                                <div className="relative h-48 bg-gradient-to-br from-orange-400 to-amber-400 overflow-hidden">
+                                  {user.profilePicture ? (
+                                    <img
+                                      src={user.profilePicture}
+                                      alt={`${user.firstName} ${user.lastName}`}
+                                      className="w-full h-full object-cover object-[center_20%]"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <span className="text-white text-6xl font-bold">
+                                        {user.firstName.charAt(0)}
+                                        {user.lastName.charAt(0)}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {/* Kundli Match Badge */}
+                                  {kundliMatch && (
+                                    <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border-2 border-orange-500">
+                                      <div className="text-2xl font-bold text-orange-600">
+                                        {kundliMatch.percentage}%
+                                      </div>
+                                      <div className="text-xs text-gray-600 font-semibold">
+                                        {
+                                          getCompatibilityLevel(
+                                            kundliMatch.totalScore,
+                                          ).level
+                                        }
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {kundliMatch.totalScore}/
+                                        {kundliMatch.maxScore}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <CardContent className="p-4">
+                                  {/* Name and Badges */}
+                                  <div className="mb-3">
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                      {user.firstName} {user.lastName}
+                                    </h3>
+                                    <div className="flex flex-wrap gap-1">
+                                      {user.role === 'ADMIN' && (
+                                        <Badge
+                                          variant="warning"
+                                          className="text-xs"
+                                        >
+                                          <MdAdminPanelSettings className="mr-1" />
+                                          Admin
+                                        </Badge>
+                                      )}
+                                      {user.role === 'MODERATOR' && (
+                                        <Badge
+                                          variant="info"
+                                          className="text-xs"
+                                        >
+                                          <FaUserShield className="mr-1" />
+                                          Moderator
+                                        </Badge>
+                                      )}
+                                      {user.approvalStatus === 'APPROVED' && (
+                                        <Badge
+                                          variant="success"
+                                          className="text-xs"
+                                        >
+                                          <MdVerified className="mr-1" />
+                                          Approved
+                                        </Badge>
+                                      )}
+                                      {user.approvalStatus === 'PENDING' && (
+                                        <Badge
+                                          variant="warning"
+                                          className="text-xs"
+                                        >
+                                          <MdPending className="mr-1" />
+                                          Pending
+                                        </Badge>
+                                      )}
+                                      {user.approvalStatus === 'REJECTED' && (
+                                        <Badge
+                                          variant="destructive"
+                                          className="text-xs"
+                                        >
+                                          <MdCancel className="mr-1" />
+                                          Rejected
+                                        </Badge>
+                                      )}
+                                      {user.manglik === 'YES' && (
+                                        <Badge
+                                          variant="destructive"
+                                          className="text-xs"
+                                        >
+                                          मांगलिक
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Profile Details */}
+                                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                                    {user.fatherOrHusbandName && (
+                                      <p>
+                                        <strong>पिता/पति:</strong>{' '}
+                                        {user.fatherOrHusbandName}
+                                      </p>
+                                    )}
+                                    <p>
+                                      <strong>आयु/लिंग:</strong> {user.age}{' '}
+                                      years • {user.gender}
+                                    </p>
+                                    {user.gotra && (
+                                      <p>
+                                        <strong>गोत्र:</strong>{' '}
+                                        {formatCombinedValue(user.gotra)}
+                                      </p>
+                                    )}
+                                    {user.motherGotra && (
+                                      <p>
+                                        <strong>माता का गोत्र:</strong>{' '}
+                                        {formatCombinedValue(user.motherGotra)}
+                                      </p>
+                                    )}
+                                    {user.ancestralVillage && (
+                                      <p>
+                                        <strong>गांव:</strong>{' '}
+                                        {formatCombinedValue(
+                                          user.ancestralVillage,
+                                        )}
+                                      </p>
+                                    )}
+                                    {user.education && (
+                                      <p>
+                                        <strong>शिक्षा:</strong>{' '}
+                                        {user.education}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  {/* Footer with timestamp and button */}
+                                  <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                                    <p className="text-xs text-gray-500">
+                                      Profile ID: {user.id.substring(0, 8)}
+                                    </p>
+                                    <Button
+                                      onClick={() =>
+                                        router.push(`/admin/profile/${user.id}`)
+                                      }
+                                      variant="default"
+                                      size="sm"
+                                    >
+                                      View Profile
+                                    </Button>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            )
+                          })}
                         </div>
                       </div>
                     )}

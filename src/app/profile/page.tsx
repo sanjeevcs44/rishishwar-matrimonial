@@ -13,6 +13,10 @@ import {
   STATE_OPTIONS,
   DISTRICT_MAP,
   ANCESTRAL_VILLAGES,
+  NAKSHATRAS,
+  RASHIS,
+  GANAS,
+  NADIS,
 } from '@/data/formOptions'
 
 interface User {
@@ -43,6 +47,10 @@ interface User {
   manglik: string | null
   birthTime: string | null
   birthPlace: string | null
+  nakshatra: string | null
+  rashi: string | null
+  gana: string | null
+  nadi: string | null
 }
 
 export default function ProfilePage() {
@@ -73,6 +81,10 @@ export default function ProfilePage() {
     manglik: '',
     birthTime: '',
     birthPlace: '',
+    nakshatra: '',
+    rashi: '',
+    gana: '',
+    nadi: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -211,6 +223,10 @@ export default function ProfilePage() {
         manglik: userData.manglik || '',
         birthTime: userData.birthTime || '',
         birthPlace: userData.birthPlace || '',
+        nakshatra: userData.nakshatra || '',
+        rashi: userData.rashi || '',
+        gana: userData.gana || '',
+        nadi: userData.nadi || '',
       })
 
       // Set existing profile picture preview
@@ -784,6 +800,86 @@ export default function ProfilePage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Enter birth place"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    नक्षत्र (Nakshatra - Birth Star)
+                  </label>
+                  <select
+                    value={formData.nakshatra}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nakshatra: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">चुनें / Select</option>
+                    {NAKSHATRAS.map((nakshatra) => (
+                      <option key={nakshatra} value={nakshatra}>
+                        {nakshatra}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    राशि (Rashi - Moon Sign)
+                  </label>
+                  <select
+                    value={formData.rashi}
+                    onChange={(e) =>
+                      setFormData({ ...formData, rashi: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">चुनें / Select</option>
+                    {RASHIS.map((rashi) => (
+                      <option key={rashi} value={rashi}>
+                        {rashi}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    गण (Gana - Temperament)
+                  </label>
+                  <select
+                    value={formData.gana}
+                    onChange={(e) =>
+                      setFormData({ ...formData, gana: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">चुनें / Select</option>
+                    {GANAS.map((gana) => (
+                      <option key={gana} value={gana}>
+                        {gana}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    नाड़ी (Nadi)
+                  </label>
+                  <select
+                    value={formData.nadi}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nadi: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">चुनें / Select</option>
+                    {NADIS.map((nadi) => (
+                      <option key={nadi} value={nadi}>
+                        {nadi}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>

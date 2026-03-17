@@ -35,6 +35,10 @@ export async function POST(request: NextRequest) {
       manglik,
       birthTime,
       birthPlace,
+      nakshatra,
+      rashi,
+      gana,
+      nadi,
     } = body
 
     // Compute age from dateOfBirth if age not supplied
@@ -198,6 +202,10 @@ export async function POST(request: NextRequest) {
         manglik: manglik?.trim() || null,
         birthTime: birthTime?.trim() || null,
         birthPlace: birthPlace?.trim() || null,
+        nakshatra: nakshatra?.trim() || null,
+        rashi: rashi?.trim() || null,
+        gana: gana?.trim() || null,
+        nadi: nadi?.trim() || null,
       },
     })
 

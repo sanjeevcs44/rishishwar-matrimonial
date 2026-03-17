@@ -27,6 +27,10 @@ export async function PUT(request: NextRequest) {
       manglik,
       birthTime,
       birthPlace,
+      nakshatra,
+      rashi,
+      gana,
+      nadi,
     } = body
 
     // Validation
@@ -91,6 +95,10 @@ export async function PUT(request: NextRequest) {
         birthTime: birthTime !== undefined ? birthTime : existingUser.birthTime,
         birthPlace:
           birthPlace !== undefined ? birthPlace : existingUser.birthPlace,
+        nakshatra: nakshatra !== undefined ? nakshatra : existingUser.nakshatra,
+        rashi: rashi !== undefined ? rashi : existingUser.rashi,
+        gana: gana !== undefined ? gana : existingUser.gana,
+        nadi: nadi !== undefined ? nadi : existingUser.nadi,
       },
     })
 

@@ -69,11 +69,15 @@ export async function PUT(
     const { id } = await params
     const body = await request.json()
 
+    console.log('PUT request body:', JSON.stringify(body, null, 2))
+
     // Remove fields that shouldn't be updated directly
     const {
       id: _id,
       createdAt,
       updatedAt,
+      approvedAt,
+      approvedBy,
       password,
       otp,
       otpExpiry,
@@ -85,10 +89,67 @@ export async function PUT(
       updateData.age = parseInt(updateData.age)
     }
 
+    // Convert dateOfBirth to Date object if it's a string
+    if (updateData.dateOfBirth && typeof updateData.dateOfBirth === 'string') {
+      updateData.dateOfBirth = new Date(updateData.dateOfBirth)
+    }
+
+    console.log(
+      'Update data after processing:',
+      JSON.stringify(updateData, null, 2),
+    )
+
+    // Validate and clean updateData - remove any undefined or invalid fields
+    const cleanedData: any = {}
+    const validFields = [
+      'firstName',
+      'lastName',
+      'email',
+      'mobile',
+      'age',
+      'gender',
+      'fatherOrHusbandName',
+      'motherName',
+      'maritalStatus',
+      'education',
+      'gotra',
+      'motherGotra',
+      'profession',
+      'yearlyIncome',
+      'state',
+      'district',
+      'currentAddress',
+      'ancestralVillage',
+      'dateOfBirth',
+      'profilePicture',
+      'bio',
+      'height',
+      'complexion',
+      'assignedVillage',
+      'manglik',
+      'birthTime',
+      'birthPlace',
+      'nakshatra',
+      'rashi',
+      'gana',
+      'nadi',
+      'role',
+      'approvalStatus',
+      'familyId',
+    ]
+
+    for (const key of validFields) {
+      if (updateData[key] !== undefined) {
+        cleanedData[key] = updateData[key]
+      }
+    }
+
+    console.log('Cleaned data:', JSON.stringify(cleanedData, null, 2))
+
     // Update user profile
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: updateData,
+      data: cleanedData,
     })
 
     return NextResponse.json({
@@ -96,10 +157,12 @@ export async function PUT(
       message: 'Profile updated successfully',
       user: updatedUser,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating user profile:', error)
+    console.error('Error message:', error.message)
+    console.error('Error stack:', error.stack)
     return NextResponse.json(
-      { error: 'Failed to update profile' },
+      { error: 'Failed to update profile', details: error.message },
       { status: 500 },
     )
   }

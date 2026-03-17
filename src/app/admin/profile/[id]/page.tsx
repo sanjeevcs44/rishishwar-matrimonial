@@ -21,6 +21,7 @@ import {
   MdSave,
 } from 'react-icons/md'
 import { FaUserShield } from 'react-icons/fa'
+import { NAKSHATRAS, RASHIS, GANAS, NADIS } from '@/data/formOptions'
 
 interface User {
   id: string
@@ -57,6 +58,10 @@ interface User {
   manglik?: string | null
   birthTime?: string | null
   birthPlace?: string | null
+  nakshatra?: string | null
+  rashi?: string | null
+  gana?: string | null
+  nadi?: string | null
 }
 
 export default function UserProfilePage() {
@@ -217,6 +222,8 @@ export default function UserProfilePage() {
 
       const data = await response.json()
 
+      console.log('Update response:', { status: response.status, data })
+
       if (response.ok) {
         const updatedUserData = {
           ...editedUser,
@@ -228,7 +235,10 @@ export default function UserProfilePage() {
         setIsEditing(false)
         alert('Profile updated successfully!')
       } else {
-        alert(data.error || 'Failed to update profile')
+        console.error('Update failed:', data)
+        alert(
+          `Failed to update profile: ${data.details || data.error || 'Unknown error'}`,
+        )
       }
     } catch (error) {
       console.error('Error updating profile:', error)
@@ -590,17 +600,6 @@ export default function UserProfilePage() {
               {renderEditableField('Complexion', 'complexion')}
             </div>
 
-            {/* Astrological Details */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
-                <MdPerson className="text-purple-600" />
-                Astrological Details
-              </h2>
-              {renderSelectField('Manglik', 'manglik', ['', 'YES', 'NO'])}
-              {renderEditableField('Birth Time', 'birthTime', 'time')}
-              {renderEditableField('Birth Place', 'birthPlace')}
-            </div>
-
             {/* Location Details */}
             <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
@@ -632,6 +631,33 @@ export default function UserProfilePage() {
                 About / Bio
               </h2>
               {renderEditableField('Bio', 'bio', 'text', true)}
+            </div>
+
+            {/* Astrological Details */}
+            <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
+              <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">
+                Astrological Details / ज्योतिषीय विवरण
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderSelectField('Manglik / मांगलिक', 'manglik', [
+                  '',
+                  'YES',
+                  'NO',
+                ])}
+                {renderEditableField(
+                  'Birth Time / जन्म समय',
+                  'birthTime',
+                  'time',
+                )}
+                {renderEditableField('Birth Place / जन्म स्थान', 'birthPlace')}
+                {renderSelectField('Nakshatra / नक्षत्र', 'nakshatra', [
+                  '',
+                  ...NAKSHATRAS,
+                ])}
+                {renderSelectField('Rashi / राशि', 'rashi', ['', ...RASHIS])}
+                {renderSelectField('Gana / गण', 'gana', ['', ...GANAS])}
+                {renderSelectField('Nadi / नाड़ी', 'nadi', ['', ...NADIS])}
+              </div>
             </div>
 
             {/* Account Information */}

@@ -710,3 +710,56 @@ export const ANCESTRAL_VILLAGES = [
   'sahav-सहाव',
   'lahchura-लहचूरा',
 ]
+
+// Nakshatra (Birth Star) - 27 options
+export const NAKSHATRAS = [
+  'Ashwini',
+  'Bharani',
+  'Krittika',
+  'Rohini',
+  'Mrigashira',
+  'Ardra',
+  'Punarvasu',
+  'Pushya',
+  'Ashlesha',
+  'Magha',
+  'Purva Phalguni',
+  'Uttara Phalguni',
+  'Hasta',
+  'Chitra',
+  'Swati',
+  'Vishakha',
+  'Anuradha',
+  'Jyeshtha',
+  'Mula',
+  'Purva Ashadha',
+  'Uttara Ashadha',
+  'Shravana',
+  'Dhanishta',
+  'Shatabhisha',
+  'Purva Bhadrapada',
+  'Uttara Bhadrapada',
+  'Revati',
+]
+
+// Rashi (Moon Sign) - 12 options
+export const RASHIS = [
+  'Aries (Mesh)',
+  'Taurus (Vrishabh)',
+  'Gemini (Mithun)',
+  'Cancer (Kark)',
+  'Leo (Singh)',
+  'Virgo (Kanya)',
+  'Libra (Tula)',
+  'Scorpio (Vrishchik)',
+  'Sagittarius (Dhanu)',
+  'Capricorn (Makar)',
+  'Aquarius (Kumbh)',
+  'Pisces (Meen)',
+]
+
+// Gana (Temperament) - 3 options
+export const GANAS = ['Dev', 'Manushya', 'Rakshasa']
+
+// Nadi (Health & Genes) - 3 options
+export const NADIS = ['Aadi', 'Madhya', 'Antya']

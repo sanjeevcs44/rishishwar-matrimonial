@@ -11,6 +11,10 @@ import {
   STATE_OPTIONS,
   DISTRICT_MAP,
   ANCESTRAL_VILLAGES,
+  NAKSHATRAS,
+  RASHIS,
+  GANAS,
+  NADIS,
 } from '@/data/formOptions'
 
 export default function RegisterPage() {
@@ -39,6 +43,10 @@ export default function RegisterPage() {
     manglik: '',
     birthTime: '',
     birthPlace: '',
+    nakshatra: '',
+    rashi: '',
+    gana: '',
+    nadi: '',
   })
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -141,6 +149,10 @@ export default function RegisterPage() {
         manglik: formData.manglik,
         birthTime: formData.birthTime,
         birthPlace: formData.birthPlace,
+        nakshatra: formData.nakshatra,
+        rashi: formData.rashi,
+        gana: formData.gana,
+        nadi: formData.nadi,
       }
 
       console.log('Submitting registration with payload:', payload)
@@ -649,6 +661,90 @@ export default function RegisterPage() {
                     className="form-input"
                     placeholder="Enter birth place"
                   />
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="nakshatra">
+                    नक्षत्र (Nakshatra - Birth Star)
+                  </label>
+                  <select
+                    id="nakshatra"
+                    value={formData.nakshatra}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nakshatra: e.target.value })
+                    }
+                    className="form-input"
+                  >
+                    <option value="">चुनें / Select</option>
+                    {NAKSHATRAS.map((nakshatra) => (
+                      <option key={nakshatra} value={nakshatra}>
+                        {nakshatra}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="rashi">
+                    राशि (Rashi - Moon Sign)
+                  </label>
+                  <select
+                    id="rashi"
+                    value={formData.rashi}
+                    onChange={(e) =>
+                      setFormData({ ...formData, rashi: e.target.value })
+                    }
+                    className="form-input"
+                  >
+                    <option value="">चुनें / Select</option>
+                    {RASHIS.map((rashi) => (
+                      <option key={rashi} value={rashi}>
+                        {rashi}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="gana">
+                    गण (Gana - Temperament)
+                  </label>
+                  <select
+                    id="gana"
+                    value={formData.gana}
+                    onChange={(e) =>
+                      setFormData({ ...formData, gana: e.target.value })
+                    }
+                    className="form-input"
+                  >
+                    <option value="">चुनें / Select</option>
+                    {GANAS.map((gana) => (
+                      <option key={gana} value={gana}>
+                        {gana}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="nadi">
+                    नाड़ी (Nadi)
+                  </label>
+                  <select
+                    id="nadi"
+                    value={formData.nadi}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nadi: e.target.value })
+                    }
+                    className="form-input"
+                  >
+                    <option value="">चुनें / Select</option>
+                    {NADIS.map((nadi) => (
+                      <option key={nadi} value={nadi}>
+                        {nadi}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
